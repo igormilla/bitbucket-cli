@@ -1,6 +1,6 @@
 {
   "name": "im-bitbucket-cli",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Bitbucket CLI",
   "repository": {
     "type": "git",
@@ -11,7 +11,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "bin": {
-    "bitbucket-cli": "bitbucket-cli.js"
+    "bb": "bitbucket-cli.js"
   },
   "keywords": [
     "bitbucket",
