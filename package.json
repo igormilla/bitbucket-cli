@@ -1,10 +1,10 @@
 {
   "name": "bitbucket-cli",
-  "version": "0.4.0",
-  "description": "Mini Mini Mini Bitbucket CLI",
+  "version": "0.5.0",
+  "description": "Bitbucket CLI",
   "repository": {
     "type": "git",
-    "url": "https://github.com/sebric/bitbucket-cli"
+    "url": "https://github.com/igormilla/bitbucket-cli"
   },
   "main": "index.js",
   "scripts": {
@@ -18,7 +18,10 @@
     "git",
     "cli"
   ],
-  "author": "sebric",
+  "authors": [
+    "sebric",
+    "igormilla"
+  ],
   "license": "MIT",
   "dependencies": {
     "axios": "^0.18.0",
