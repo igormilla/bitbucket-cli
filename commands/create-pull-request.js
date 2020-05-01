@@ -1,6 +1,7 @@
 const axios = require('axios')
 const ora = require('ora')
 const prettyjson = require('prettyjson')
+const git = require('../helpers/git')
 
 module.exports = ({ program }) => {
   let client = null
@@ -11,10 +12,10 @@ module.exports = ({ program }) => {
     reviewers.push(value)
   }
 
-  const fetchDescription = function (source, target) {
+  const fetchDescription = function (source, destination) {
     return client.get(`/commits/${source}`, {
       params: {
-        exclude: target
+        exclude: destination
       }
     })
       .then((r) => {
@@ -31,21 +32,22 @@ module.exports = ({ program }) => {
 
   program
     .description('Create a Bitbucket PR')
-    .arguments('<repo-slug> <title>')
-    .option('-s, --source <source>', 'Source Branch', 'develop')
-    .option('-t, --target <target>', 'Target Branch', 'master')
+    .option('-t, --title <title>', 'PR Title', git.getCurrentBranch())
+    .option('-rs, --repo-slug <repo-slug>', 'Repo slug', git.getCurrentBitbucketSlug())
+    .option('-s, --source <source>', 'Source Branch', git.getCurrentBranch())
+    .option('-d, --destination <destination>', 'destination Branch', 'master')
     .option('-r, --reviewer <reviewer>', 'Add one or more reviewers by username (only Username works), use once with comma-separated values or multiple times', addReviewer)
     .option('-d, --description <description>', 'Describe the PR, supports Markdown or leave it to us to generate a comprehensive description')
-    .option('-u, --username <username>', 'Username to connect to bitbucket')
-    .option('-p, --password <password>', 'Password to connect to bitbucket')
-    .option('--keep-branch', 'Should BB keep the branch open after merge?')
+    .option('-u, --username <username>', 'Username to connect to bitbucket', process.env.BT_USER)
+    .option('-p, --password <password>', 'Password to connect to bitbucket', process.env.BT_PASS)
+    .option('--keep-branch', 'Should BB keep the branch open after merge?', true)
     .option('--no-fail', 'Command will not exit with code != 0 even on failure')
     .option('--debug', 'Output message to be sent to Bitbucket API')
-    .action((repoSlug, title, cmd) => {
-      const spinner = ora(`Creating Pull Request at ${repoSlug}`).start()
+    .action((cmd) => {
+      const spinner = ora(`Creating Pull Request at ${cmd.repoSlug}`).start()
 
       client = axios.create({
-        baseURL: `https://api.bitbucket.org/2.0/repositories/${repoSlug}`,
+        baseURL: `https://api.bitbucket.org/2.0/repositories/${process.env.BT_COMPANY}/${cmd.repoSlug}`,
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json'
@@ -59,16 +61,16 @@ module.exports = ({ program }) => {
       })
 
       const message = {
-        title: title,
+        title: cmd.title,
         close_source_branch: !cmd.keepBranch,
         source: {
           branch: {
             name: cmd.source
           }
         },
-        target: {
+        destination: {
           branch: {
-            name: cmd.target
+            name: cmd.destination
           }
         }
       }
@@ -89,7 +91,7 @@ module.exports = ({ program }) => {
 
       const findDescription = typeof cmd.description === 'string'
         ? Promise.resolve(cmd.description)
-        : fetchDescription(message.source.branch.name, message.target.branch.name)
+        : fetchDescription(message.source.branch.name, message.destination.branch.name)
 
       findDescription
         .then(description => {
